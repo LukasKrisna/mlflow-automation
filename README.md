@@ -1,6 +1,6 @@
 # MLflow Credit Scoring Model Automation
 
-[![CI/CD MLflow](https://github.com/lukaskrisna/mlflow-automation/actions/workflows/main.yml/badge.svg)](https://github.com/yourusername/mlflow-automation/actions/workflows/main.yml)
+[![CI/CD MLflow](https://github.com/lukaskrisna/mlflow-automation/actions/workflows/main.yml/badge.svg)](https://github.com/lukaskrisna/mlflow-automation/actions/workflows/main.yml)
 
 A machine learning project that automates the training, tracking, and deployment of a credit scoring model using MLflow and GitHub Actions.
 

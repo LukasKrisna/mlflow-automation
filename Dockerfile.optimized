@@ -1,0 +1,50 @@
+# Multi-stage build for optimized Docker image
+FROM python:3.12.7-slim as builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY MLproject/conda.yaml /tmp/conda.yaml
+RUN pip install --no-cache-dir --user \
+    mlflow==2.19.0 \
+    scikit-learn==1.6.0 \
+    pandas==2.2.3 \
+    numpy==2.2.1 \
+    joblib \
+    cloudpickle==3.1.0
+
+# Production stage
+FROM python:3.12.7-slim
+
+# Copy only the installed packages from builder
+COPY --from=builder /root/.local /root/.local
+
+# Add local binaries to PATH
+ENV PATH=/root/.local/bin:$PATH
+
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash mlflow
+
+# Set working directory
+WORKDIR /opt/ml/model
+
+# Copy model artifacts (will be mounted during runtime)
+USER mlflow
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Set memory limits to prevent OOM
+ENV MALLOC_ARENA_MAX=2
+ENV PYTHONUNBUFFERED=1
+
+# Command to start the MLflow model server
+CMD ["mlflow", "models", "serve", "-m", "/opt/ml/model", "-h", "0.0.0.0", "-p", "8080", "--env-manager", "local"]
